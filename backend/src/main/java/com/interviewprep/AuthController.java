@@ -1,48 +1,47 @@
 package com.interviewprep;
 
 import org.springframework.web.bind.annotation.*;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository userRepository) {
+    public AuthController(UserRepository userRepository,
+                          PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
-    public Map<String, String> register(@RequestBody RegisterRequest request) {
-
-        Map<String, String> response = new HashMap<>();
+    public String register(@RequestBody RegisterRequest request) {
 
         // check if email already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
-            response.put("message", "Email already registered");
-            return response;
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            return "Email already registered";
         }
 
         // check password match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            response.put("message", "Passwords do not match");
-            return response;
+            return "Passwords do not match";
         }
 
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-        user.setRole("USER");
+
+        // ENCRYPT PASSWORD
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        user.setRole(Role.USER);
         user.setVerified(false);
 
         userRepository.save(user);
 
-        response.put("message", "User registered successfully");
-
-        return response;
+        return "User registered successfully";
     }
 }

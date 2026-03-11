@@ -3,7 +3,6 @@ package com.interviewprep;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users")
 public class User {
 
     @Id
@@ -19,9 +18,10 @@ public class User {
 
     private String password;
 
-    private String role;
-
     private boolean verified;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public User() {}
 
@@ -45,12 +45,12 @@ public class User {
         return password;
     }
 
-    public String getRole() {
-        return role;
-    }
-
     public boolean isVerified() {
         return verified;
+    }
+
+    public Role getRole() {
+        return role;
     }
 
     public void setId(Long id) {
@@ -73,11 +73,11 @@ public class User {
         this.password = password;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
