@@ -1,6 +1,8 @@
 package com.interviewprep;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.util.List;
 
 @RestController
@@ -13,26 +15,28 @@ public class CategoryController {
         this.categoryRepository = categoryRepository;
     }
 
-    // CREATE
+    // CREATE → ADMIN only
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Category addCategory(@RequestBody Category category) {
         return categoryRepository.save(category);
     }
 
-    // GET ALL
+    // GET ALL → USER + ADMIN
     @GetMapping
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
-    // GET BY ID
+    // GET BY ID → USER + ADMIN
     @GetMapping("/{id}")
     public Category getCategoryById(@PathVariable Long id) {
         return categoryRepository.findById(id).orElse(null);
     }
 
-    // UPDATE
+    // UPDATE → ADMIN only
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Category updateCategory(@PathVariable Long id,
                                    @RequestBody Category updatedCategory) {
 
@@ -46,8 +50,9 @@ public class CategoryController {
         return null;
     }
 
-    // DELETE
+    // DELETE → ADMIN only
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String deleteCategory(@PathVariable Long id) {
         categoryRepository.deleteById(id);
         return "Category Deleted Successfully";

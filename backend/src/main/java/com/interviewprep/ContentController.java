@@ -1,6 +1,7 @@
 package com.interviewprep;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -16,12 +17,16 @@ public class ContentController {
         this.subTopicRepository = subTopicRepository;
     }
 
-    // CREATE
+    // =========================
+    // CREATE (ADMIN ONLY)
+    // =========================
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Content addContent(@RequestBody Content content) {
 
         if (content.getSubTopic() != null) {
             Long subTopicId = content.getSubTopic().getId();
+
             SubTopic subTopic = subTopicRepository.findById(subTopicId)
                     .orElseThrow(() -> new RuntimeException("SubTopic not found"));
 
@@ -31,27 +36,36 @@ public class ContentController {
         return contentRepository.save(content);
     }
 
-    // GET ALL
+    // =========================
+    // GET ALL (USER + ADMIN)
+    // =========================
     @GetMapping
     public List<Content> getAllContents() {
         return contentRepository.findAll();
     }
 
-    // GET BY SUBTOPIC
+    // =========================
+    // GET BY SUBTOPIC (USER + ADMIN)
+    // =========================
     @GetMapping(params = "subTopicId")
     public List<Content> getContentsBySubTopic(@RequestParam Long subTopicId) {
         return contentRepository.findBySubTopicId(subTopicId);
     }
 
-    // GET BY ID
+    // =========================
+    // GET BY ID (USER + ADMIN)
+    // =========================
     @GetMapping("/{id}")
     public Content getContentById(@PathVariable Long id) {
         return contentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Content not found"));
     }
 
-    // UPDATE
+    // =========================
+    // UPDATE (ADMIN ONLY)
+    // =========================
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Content updateContent(@PathVariable Long id,
                                  @RequestBody Content updatedContent) {
 
@@ -65,8 +79,11 @@ public class ContentController {
         return contentRepository.save(content);
     }
 
-    // DELETE
+    // =========================
+    // DELETE (ADMIN ONLY)
+    // =========================
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String deleteContent(@PathVariable Long id) {
 
         if (!contentRepository.existsById(id)) {

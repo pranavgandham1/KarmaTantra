@@ -1,6 +1,7 @@
 package com.interviewprep;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,9 +19,10 @@ public class SubTopicController {
     }
 
     // =========================
-    // CREATE SubTopic
+    // CREATE SubTopic (ADMIN ONLY)
     // =========================
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public SubTopic addSubTopic(@RequestBody SubTopic subTopic) {
 
         if (subTopic.getTopic() == null || subTopic.getTopic().getId() == null) {
@@ -38,7 +40,7 @@ public class SubTopicController {
     }
 
     // =========================
-    // GET SubTopics (with filter)
+    // GET SubTopics (USER + ADMIN)
     // =========================
     @GetMapping
     public List<SubTopic> getSubTopics(@RequestParam(required = false) Long topicId) {
@@ -51,7 +53,7 @@ public class SubTopicController {
     }
 
     // =========================
-    // GET By ID
+    // GET By ID (USER + ADMIN)
     // =========================
     @GetMapping("/{id}")
     public SubTopic getSubTopicById(@PathVariable Long id) {
@@ -60,9 +62,10 @@ public class SubTopicController {
     }
 
     // =========================
-    // UPDATE
+    // UPDATE (ADMIN ONLY)
     // =========================
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public SubTopic updateSubTopic(@PathVariable Long id,
                                    @RequestBody SubTopic updatedSubTopic) {
 
@@ -86,9 +89,10 @@ public class SubTopicController {
     }
 
     // =========================
-    // DELETE
+    // DELETE (ADMIN ONLY)
     // =========================
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String deleteSubTopic(@PathVariable Long id) {
 
         if (!subTopicRepository.existsById(id)) {

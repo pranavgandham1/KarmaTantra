@@ -1,6 +1,7 @@
 package com.interviewprep;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,9 +19,10 @@ public class TopicController {
     }
 
     // =========================
-    // CREATE Topic
+    // CREATE Topic (ADMIN ONLY)
     // =========================
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Topic addTopic(@RequestBody Topic topic) {
 
         if (topic.getSubject() == null || topic.getSubject().getId() == null) {
@@ -38,7 +40,7 @@ public class TopicController {
     }
 
     // =========================
-    // GET Topics (With Filtering Support)
+    // GET Topics (USER + ADMIN)
     // =========================
     @GetMapping
     public List<Topic> getTopics(@RequestParam(required = false) Long subjectId) {
@@ -51,7 +53,7 @@ public class TopicController {
     }
 
     // =========================
-    // GET Topic By ID
+    // GET Topic By ID (USER + ADMIN)
     // =========================
     @GetMapping("/{id}")
     public Topic getTopicById(@PathVariable Long id) {
@@ -61,9 +63,10 @@ public class TopicController {
     }
 
     // =========================
-    // UPDATE Topic
+    // UPDATE Topic (ADMIN ONLY)
     // =========================
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Topic updateTopic(@PathVariable Long id,
                              @RequestBody Topic updatedTopic) {
 
@@ -87,9 +90,10 @@ public class TopicController {
     }
 
     // =========================
-    // DELETE Topic
+    // DELETE Topic (ADMIN ONLY)
     // =========================
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String deleteTopic(@PathVariable Long id) {
 
         if (!topicRepository.existsById(id)) {

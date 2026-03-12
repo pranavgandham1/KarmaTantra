@@ -1,6 +1,7 @@
 package com.interviewprep;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,9 +19,10 @@ public class SubjectController {
     }
 
     // =========================
-    // CREATE Subject
+    // CREATE Subject (ADMIN ONLY)
     // =========================
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Subject addSubject(@RequestBody Subject subject) {
 
         if (subject.getCategory() == null || subject.getCategory().getId() == null) {
@@ -38,7 +40,7 @@ public class SubjectController {
     }
 
     // =========================
-    // GET All Subjects
+    // GET All Subjects (USER + ADMIN)
     // =========================
     @GetMapping
     public List<Subject> getAllSubjects() {
@@ -46,7 +48,7 @@ public class SubjectController {
     }
 
     // =========================
-    // GET Subject By ID
+    // GET Subject By ID (USER + ADMIN)
     // =========================
     @GetMapping("/{id}")
     public Subject getSubjectById(@PathVariable Long id) {
@@ -55,9 +57,23 @@ public class SubjectController {
     }
 
     // =========================
-    // UPDATE Subject
+    // GET Subjects By Category (Hierarchical API)
+    // =========================
+    @GetMapping("/category/{categoryId}")
+    public List<Subject> getSubjectsByCategory(@PathVariable Long categoryId) {
+
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new RuntimeException("Category not found with id: " + categoryId);
+        }
+
+        return subjectRepository.findByCategoryId(categoryId);
+    }
+
+    // =========================
+    // UPDATE Subject (ADMIN ONLY)
     // =========================
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Subject updateSubject(@PathVariable Long id,
                                  @RequestBody Subject updatedSubject) {
 
@@ -81,9 +97,10 @@ public class SubjectController {
     }
 
     // =========================
-    // DELETE Subject
+    // DELETE Subject (ADMIN ONLY)
     // =========================
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String deleteSubject(@PathVariable Long id) {
 
         if (!subjectRepository.existsById(id)) {

@@ -23,6 +23,9 @@ private EmailService emailService;
 @Autowired
 private OtpService otpService;
 
+@Autowired
+private JwtService jwtService;
+
 @PostMapping("/register")
 public String register(@RequestBody RegisterRequest request) {
 
@@ -93,7 +96,9 @@ public String login(@RequestBody LoginRequest request) {
         return "Please verify your email before login";
     }
 
-    return "Login successful";
+    String token = jwtService.generateToken(user.getEmail());
+
+    return token;
 }
 
 
