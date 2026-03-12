@@ -1,47 +1,100 @@
 package com.interviewprep;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository userRepository,
-                          PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+@Autowired
+private UserRepository userRepository;
+
+@Autowired
+private PasswordEncoder passwordEncoder;
+
+@Autowired
+private EmailService emailService;
+
+@Autowired
+private OtpService otpService;
+
+@PostMapping("/register")
+public String register(@RequestBody RegisterRequest request) {
+
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        return "Email already registered";
     }
 
-    @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
+    if (!request.getPassword().equals(request.getConfirmPassword())) {
+        return "Passwords do not match";
+    }
 
-        // check if email already exists
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return "Email already registered";
-        }
+    User user = new User();
 
-        // check password match
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return "Passwords do not match";
-        }
+    user.setFirstName(request.getFirstName());
+    user.setLastName(request.getLastName());
+    user.setEmail(request.getEmail());
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
+    user.setRole(Role.USER);
+    user.setVerified(false);
 
-        User user = new User();
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
+    userRepository.save(user);
 
-        // ENCRYPT PASSWORD
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+    String otp = otpService.generateOtp(user.getEmail());
+    emailService.sendOtpEmail(user.getEmail(), otp);
 
-        user.setRole(Role.USER);
-        user.setVerified(false);
+    return "User registered successfully. OTP sent to email.";
+}
 
+@PostMapping("/verify-otp")
+public String verifyOtp(@RequestBody VerifyOtpRequest request) {
+
+    boolean valid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+
+    if (!valid) {
+        return "Invalid OTP";
+    }
+
+    Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+
+    if (optionalUser.isPresent()) {
+
+        User user = optionalUser.get();
+        user.setVerified(true);
         userRepository.save(user);
 
-        return "User registered successfully";
+        return "Account verified successfully";
     }
+
+    return "User not found";
+}
+
+@PostMapping("/login")
+public String login(@RequestBody LoginRequest request) {
+
+    Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+
+    if (optionalUser.isEmpty()) {
+        return "User not found";
+    }
+
+    User user = optionalUser.get();
+
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        return "Invalid password";
+    }
+
+    if (!user.isVerified()) {
+        return "Please verify your email before login";
+    }
+
+    return "Login successful";
+}
+
+
 }
